@@ -21,3 +21,9 @@ this will build an .mp4 file of the specified animation
 ## Disclaimer
 
 No warranties provided. Code may not work. It is very likely that there are better ways to implement the same animations - this is the way it worked for me.
+
+## License
+
+For further (re-)use published under the GNU GPLv3 license.
+
+Attribution: [GitHub: mauriziopiu/manimations](https://github.com/mauriziopiu/manimations)
