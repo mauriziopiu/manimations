@@ -1,66 +1,87 @@
 from manim import *
 import numpy as np
 
-class CreateHermiteCurve(Scene):
+class HermiteCurve(Scene):
     def construct(self):
+        p0 = [-2.0, -1.5, 0.0] # control point 0
+        p0t = [-3.0, 4.0, 0.0] # tangent vector at control point 0
+        p1 = [3.0, 1.0, 0.0] # control point 1
+        p1t = [-3.0, -5.0, 0.0] # tangent vector at control point 1
         
-        p0 = (-2.0, -1.0, 0.0)
-        p0t = (-4.0, 3.0, 0.0)
-        point1a = Dot(point=p0, color=RED)
-        p0_label = Text(f"P_0 = ({p0[0]}, {p0[1]}, {p0[2]})").scale(.5).next_to(point1a, DOWN, buff=0.5)
-        point1b = Dot(point=p0t, color=RED)
-        p0t_arrow = Arrow(start=p0, end=(point1a.get_center() + point1b.get_center()), color=WHITE)
-        p0t_label = Text(f"P_0ᵗ = ({p0t[0]}, {p0t[1]}, {p0t[2]})").scale(.5).next_to(p0t_arrow, DOWN, buff=0.1)
+        # visualise parameters
+        self.showParameters(p0, p0t, p1, p1t)
         
-        p1 = (3.0, 1.0, 0.0)
-        p1t = (0.0, -10.0, 0.0)
-        point2a = Dot(point=p1, color=BLUE)
-        p1_label = Text(f"P_1 = ({p1[0]}, {p1[1]}, {p1[2]})").scale(.5).next_to(point2a, RIGHT, buff=0.5)
-        point2b = Dot(point=p1t, color=BLUE)
-        p1t_arrow = Arrow(start=p1, end=(point2a.get_center() + point2b.get_center()), color=WHITE)
-        p1t_label = Text(f"P_1ᵗ = ({p1t[0]}, {p1t[1]}, {p1t[2]})").scale(.5).next_to(p1_label, DOWN, buff=1.5)     
+        # put params in matrix form: P
+        p_mat = np.array([p0, p1, p0t, p1t])
         
-        self.add(point1a)
-        self.add(p0_label)
-        # self.add(point1b) # this is a vector and not a point
-        self.add(p0t_arrow)
-        self.add(p0t_label)
-        self.add(point2a)
-        self.add(p1_label)
-        # self.add(point2b) # this is a vector and not a point
-        self.add(p1t_arrow)
-        self.add(p1t_label)
-        self.wait(1)
+        # initialise characteristic matrix
+        char_mat_hermite = np.array([[2.0, -2.0, 1.0, 1.0],
+                                     [-3.0, 3.0, -2.0, -1.0],
+                                     [0.0, 0.0, 1.0, 0.0],
+                                     [1.0, 0.0, 0.0, 0.0]])
+        
+        # calculate parameters F(t)
+        def f(t):
+            t_vec = np.array([t**3, t**2, t, 1])
+            f_vec = t_vec @ char_mat_hermite
+            return f_vec
+        
+        # calculate result P(t)
+        def p(t):
+            f_vec = f(t)
+            p_vec = f_vec @ p_mat
+            return p_vec            
+        
+        # setup path drawing
+        path = VMobject()
+        dot = Dot(p0)
+        path.set_points_as_corners([dot.get_center(), dot.get_center()])
+        self.add(path)
         
         t = 0.0
-        line = (point2a.get_center() - point1a.get_center())
         while t <= 1.0:
-            if (t != 0.0 and t != 1.0):
-                px_1 = (2*(t**3) - 3*(t**2) + 1)*p0[0]
-                px_2 = (-2*(t**3) + 3*(t**2))*p1[0]
-                px_3 = (t**3 - 2*(t**2) + t)*p0t[0]
-                px_4 = (t**3 - t**2)*p1t[0] 
-                px = px_1 + px_2 + px_3 + px_4
-                py_1 = (2*(t**3) - 3*(t**2) + 1)*p0[1]
-                py_2 = (-2*(t**3) + 3*(t**2))*p1[1]
-                py_3 = (t**3 - 2*(t**2) + t)*p0t[1]
-                py_4 = (t**3 - t**2)*p1t[1] 
-                py = py_1 + py_2 + py_3 + py_4
-                pz_1 = (2*(t**3) - 3*(t**2) + 1)*p0[2]
-                pz_2 = (-2*(t**3) + 3*(t**2))*p1[2]
-                pz_3 = (t**3 - 2*(t**2) + t)*p0t[2]
-                pz_4 = (t**3 - t**2)*p1t[2] 
-                pz = pz_1 + pz_2 + pz_3 + pz_4
-                p = Dot(point=(px, py, pz), radius=0.04, color=WHITE)
-                self.add(p)
-                
-                self.wait(.05)
-            t += 0.02;
+            previous_path = path.copy()
+            new_pos = p(t)
             
+            dot.set_x(new_pos[0])
+            dot.set_y(new_pos[1])
+            dot.set_z(new_pos[2])
+            
+            previous_path.add_points_as_corners([dot.get_center()])
+            path.become(previous_path)
+            t += 0.02
+            self.wait(.05)
+        
         self.wait(2)
-            
-            
-    def linear_interpolation(self, start, t, line):
-        p = Dot(point=(start.get_center() + (t * line)), radius=0.05, color=WHITE)
-        self.add(p)
-    
+        
+    def showParameters(self, p0, p0t, p1, p1t):
+        p0_dot = Dot(p0, color=BLUE)
+        p0t_dot = Dot(p0t, color=BLUE)
+        p0t_arrow = Arrow(start=p0, end=(p0_dot.get_center() + p0t_dot.get_center()), color=WHITE)
+        
+        p0_label = Text(f"P_0 = ({p0_dot.get_x()}, {p0_dot.get_y()}, {p0_dot.get_z()})")
+        p0_label.scale(.5).next_to(p0_dot.get_center(), DOWN, buff=0.5)
+        p0t_label = Text(f"P_0ᵗ = ({p0t_dot.get_x()}, {p0t_dot.get_y()}, {p0t_dot.get_z()})")
+        p0t_label.scale(.5).next_to((p0_dot.get_center() + (0.5 *p0t_dot.get_center())), LEFT, buff=0.5) # in the middle of the arrow's path
+        
+        self.add(p0_dot)
+        self.add(p0t_arrow)
+        self.add(p0_label)
+        self.add(p0t_label)
+        
+        p1_dot = Dot(p1, color=RED)
+        p1t_dot = Dot(p1t, color=RED)
+        p1t_arrow = Arrow(start=p1, end=(p1_dot.get_center() + p1t_dot.get_center()), color=WHITE)
+        
+        p1_label = Text(f"P_1 = ({p1_dot.get_x()}, {p1_dot.get_y()}, {p1_dot.get_z()})")
+        p1_label.scale(.5).next_to(p1_dot.get_center(), RIGHT, buff=0.5)
+        p1t_label = Text(f"P_1ᵗ = ({p1t_dot.get_x()}, {p1t_dot.get_y()}, {p1t_dot.get_z()})")
+        p1t_label.scale(.5).next_to((p1_dot.get_center() + (0.5 *p1t_dot.get_center())), RIGHT, buff=0.5) # in the middle of the arrow's path
+        
+        self.add(p1_dot)
+        self.add(p1t_arrow)
+        self.add(p1_label)
+        self.add(p1t_label)
+        
+        
+        
