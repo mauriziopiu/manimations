@@ -1,17 +1,19 @@
 # Manimations
 
-Some manim project stuffs: to be executed in a python venv.
+Some experiments with manim math animations.
+
+## Dependencies
+
+-   [manim](https://www.manim.community/)
+-   [numpy](https://numpy.org/)
+-   recommended (optional): [Manim Sideview](https://marketplace.visualstudio.com/items?itemName=Rickaym.manim-sideview) VS Code Extension
 
 ## Build & Run
 
 to enter venv: `source env/bin/activate`
-
-to build the animation:
-
-`manim -pql <filename>.py <ClassName>`
-
-for example:
-
-`manim -pql hermite2.py HermiteCurve`
-
 to leave venv: `deactivate`
+
+to build the animation: `manim -pql <filename>.py <ClassName>`
+for example: `manim -pql hermite2.py HermiteCurve`
+
+this will build an .mp4 file of the specified animation
